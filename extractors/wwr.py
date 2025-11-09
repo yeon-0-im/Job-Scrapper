@@ -10,6 +10,18 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 
+BASE_URL = "https://weworkremotely.com"
+
+def combine_url(base, path):
+    """'http'로 시작하거나 '/'로 시작하는 경로를 올바르게 조합합니다."""
+    if not path:
+        return None
+    if path.startswith("http"):
+        return path
+    if path.startswith("/"):
+        return base.rstrip("/") + path
+    return base.rstrip("/") + "/" + path
+
 def setup_driver() -> webdriver.Chrome:
     """
     Selenium WebDriver(Chrome)를 설정하고 반환합니다. (Headless 모드)
@@ -46,7 +58,7 @@ def scrape_jobs_from_soup(soup: BeautifulSoup) -> List[Dict[str, str]]:
     """
     요청하신 셀렉터 기준으로 직업 정보를 파싱합니다.
     """
-    all_jobs = [] # (변수명 all_jobs -> page_jobs로 변경)
+    all_jobs = []
     
     job_lis = soup.select("li.new-listing-container ")
     
@@ -62,8 +74,9 @@ def scrape_jobs_from_soup(soup: BeautifulSoup) -> List[Dict[str, str]]:
         conditions_list = [tag.get_text(strip=True) for tag in condition_tags]
         conditions = ", ".join(conditions_list)
 
-        link_tag = job_li.find("a", href=True) 
-        link = "https://weworkremotely.com" + link_tag['href'] if link_tag and link_tag['href'].startswith("/remote-jobs") else "N/A"
+        link_tag = job_li.select_one("a[href^='/remote-jobs/']") 
+        relative_link = link_tag['href'] if link_tag and link_tag.get('href') else None
+        link = combine_url(BASE_URL, relative_link)
 
         job_data = {
             "position": title,
@@ -88,7 +101,7 @@ def extract_wwr_jobs(keyword: str):
 
     try:
         base_url = "https://weworkremotely.com/remote-jobs/search?utf8=%E2%9C%93&term="
-        url = f"{base_url}{keyword}" # 'keyword' 변수 사용
+        url = f"{base_url}{keyword}"
         
         print(f"Scraping: {url}")
     
@@ -97,7 +110,7 @@ def extract_wwr_jobs(keyword: str):
         if soup is not None:
             # 파싱 함수를 호출하여 결과를 리스트에 저장
             jobs_on_this_page = scrape_jobs_from_soup(soup)
-            all_jobs = jobs_on_this_page # 딕셔너리가 아닌 리스트로 바로 할당
+            all_jobs = jobs_on_this_page
             print(f"--- {keyword} : {len(all_jobs)}개 수집 ---")
         else:
             print(f"--- {keyword} 페이지 로드 실패 ---")

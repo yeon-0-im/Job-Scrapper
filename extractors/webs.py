@@ -1,9 +1,19 @@
 import requests
 from bs4 import BeautifulSoup
-from typing import List, Dict # 🎯 Flask와 데이터 형식을 맞추기 위해 import
+from typing import List, Dict
 
-# --- (헬퍼 함수: scrape_data_from_soup) ---
-# 이 함수는 변경할 필요가 없습니다.
+BASE_URL = "https://web3.career"
+
+def combine_url(base, path):
+    """'http'로 시작하거나 '/'로 시작하는 경로를 올바르게 조합합니다."""
+    if not path:
+        return None
+    if path.startswith("http"):
+        return path
+    if path.startswith("/"):
+        return base.rstrip("/") + path
+    return base.rstrip("/") + "/" + path
+
 def scrape_data_from_soup(soup: BeautifulSoup) -> List[Dict[str, str]]:
     """해당 페이지의 직업 목록을 파싱."""
     
@@ -34,8 +44,9 @@ def scrape_data_from_soup(soup: BeautifulSoup) -> List[Dict[str, str]]:
         stack_list = [span.get_text(strip=True) for span in stack_spans]
         stack = ", ".join(stack_list)
 
-        link_tag = title_tag.find("a", href=True) if title_tag else None
-        link = "https://web3.career" + link_tag['href'] if link_tag and link_tag['href'].startswith("/") else "N/A"
+        link_tag = job.find("a", href=True)
+        relative_link = link_tag['href'] if link_tag and link_tag.get('href') else None
+        link = combine_url(BASE_URL, relative_link)
     
         job_data = {
             "position": title,
