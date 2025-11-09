@@ -56,4 +56,7 @@ Job-Scrapper/
     ├── home.html             # The main landing page with the search bar
     └── search.html           # The page that displays the job results table
 ```
-    
+
+---
+And this all started and ended with a lecture at 💻 https://nomadcoders.co/ 💻
+Thank you so much NICO!
