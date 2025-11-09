@@ -1,4 +1,4 @@
-# Job Scrapper ⌨
+# ⌨ Job Scrapper 
 
 A simple and lightweight web application built with Flask that aggregates job postings from multiple sources.
 Users can search for jobs by keyword (like `python`) and view the results in a clean, unified table.
